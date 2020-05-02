@@ -1,0 +1,612 @@
+﻿<Window x:Class="BatchWriter.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BatchWriter"
+        mc:Ignorable="d"
+        Title="Zamperl's Arma 3 Server Update Control (for Windows)"
+        SizeToContent="WidthAndHeight">
+    <Window.Resources>
+        <local:IntToStringConverter x:Key="IntToStringConverter"/>
+        <local:MultiTextTrimConverter x:Key="MultiTextTrimConverter"/>
+    </Window.Resources>
+    <TabControl x:Name="RootControl">
+        <TabControl.DataContext>
+            <local:ViewModel/>
+        </TabControl.DataContext>
+        <TabItem Header="Arma 3 server update">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="2">
+                    <Button DockPanel.Dock="Right" Margin="1" Width="120">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Content" Value="Start Arma 3 update"/>
+                                <Setter Property="Command" Value="{Binding Command_UpdateArma3Server}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding UpdateActive}" Value="True">
+                                        <Setter Property="Content" Value="Abort"/>
+                                        <Setter Property="Command" Value="{Binding Command_AbortUpdate}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </DockPanel>
+                <DockPanel DockPanel.Dock="Left">
+                    <Grid DockPanel.Dock="Top" VerticalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0"
+                           Content="SteamCMD Folder"/>
+                        <Button Grid.Row="0" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding SteamCMDFolder}"
+                                VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                             Text="{Binding SteamCMDFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Grid.Row="1" Grid.Column="1"
+                            Content="Browse" Margin="1"
+                            Command="{Binding Command_OpenSteamCMDFolder}"/>
+
+                        <Label Grid.Row="2" Grid.Column="0"
+                               Content="Steam Root Folder"
+                               ToolTip="Arma 3 will be searched in %Steam root folder%\steamapps\common\Arma 3 Server\"/>
+                        <Button Grid.Row="2" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding SteamRootFolder}"
+                                VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="3" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                                 Text="{Binding SteamRootFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Arma 3 will be searched in %Steam root folder%\steamapps\common\Arma 3 Server\"/>
+                        <Button Grid.Row="3" Grid.Column="1"
+                                Content="Browse" Margin="1"
+                                Command="{Binding Command_OpenSteamRootFolder}"
+                                ToolTip="Arma 3 will be searched in %Steam root folder%\steamapps\common\Arma 3 Server\"/>
+
+                        <Label Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"
+                           Content="Options"/>
+                        <Grid Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <CheckBox Grid.Row="0" Grid.Column="0" Content="Log In Anonymously" IsChecked="{Binding AnonymousSteamLogon}" Margin="1" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Max Retry Count: " Margin="1"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MaxRetryCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource IntToStringConverter}}" Margin="1"/>
+                            <CheckBox Grid.Row="2" Grid.Column="0" Content="Limit Bandwidth To: " IsChecked="{Binding LimitBandwidth}" Margin="1" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding MaxBandwidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource IntToStringConverter}}" Margin="1"/>
+                        </Grid>
+
+
+                    </Grid>
+                    <Border DockPanel.Dock="Bottom" BorderThickness="2" VerticalAlignment="Bottom" BorderBrush="Gray" Margin="2">
+                        <TextBlock TextWrapping="Wrap" Text="Make sure to close Steam client before updating!"/>
+                    </Border>
+                </DockPanel>
+
+                <Grid DockPanel.Dock="Left" Margin="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Content="Output"/>
+                    <ScrollViewer Grid.Row="1"
+                                  Width="1000" 
+                                  Height="600"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto"
+                                  x:Name="SteamOutputScrollViewerAlpha"
+                                  ScrollChanged="SteamOutputScrollViewer_ScrollChanged">
+                        <TextBox Text="{Binding SteamCMDOutput}" TextWrapping="Wrap"/>
+                    </ScrollViewer>
+                </Grid>
+
+            </DockPanel>
+        </TabItem>                 
+        <TabItem Header="Addons update">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="2">
+                    <Button DockPanel.Dock="Right" Margin="1" Width="100">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Content" Value="Update Addons"/>
+                                <Setter Property="Command" Value="{Binding Command_UpdateAddons}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding UpdateActive}" Value="True">
+                                        <Setter Property="Content" Value="Abort"/>
+                                        <Setter Property="Command" Value="{Binding Command_AbortUpdate}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button DockPanel.Dock="Right" Content="Fetch Addons" Margin="10 1" Width="100" Command="{Binding Command_FetchAddonList}"/>
+                </DockPanel>
+                <DockPanel DockPanel.Dock="Left">
+                    <Grid DockPanel.Dock="Top" VerticalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0"
+                           Content="SteamCMD Folder"/>
+                        <Button Grid.Row="0" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding SteamCMDFolder}"
+                                VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                             Text="{Binding SteamCMDFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Grid.Row="1" Grid.Column="1"
+                            Content="Browse" Margin="1"
+                            Command="{Binding Command_OpenSteamCMDFolder}"/>
+
+                        <Label Grid.Row="2" Grid.Column="0"
+                               Content="Steam Root Folder"
+                               ToolTip="Addons will be saved in %Steam root folder%\steamapps\workshop\content\107410\"/>
+                        <Button Grid.Row="2" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding SteamRootFolder}"
+                                VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="3" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                                 Text="{Binding SteamRootFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Addons will be saved in %Steam root folder%\steamapps\workshop\content\107410\"/>
+                        <Button Grid.Row="3" Grid.Column="1"
+                                Content="Browse" Margin="1"
+                                Command="{Binding Command_OpenSteamRootFolder}"
+                                ToolTip="Addons will be saved in %Steam root folder%\steamapps\workshop\content\107410\"/>
+
+                        <Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="1,5,1,1"
+                              ToolTip="Hit 'Del' to remove selected">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Content="Steam Workshop IDs"/>
+                            <ListBox Grid.Row="1" ItemsSource="{Binding SteamWorkshopIDs}" SelectionMode="Extended" Height="64"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     x:Name="SteamWorkshopIDList"
+                                     KeyDown="ListBox_KeyDown"/>
+                        </Grid>
+                        <TextBox Grid.Row="7" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                             Text="{Binding NewWorkshopID, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Grid.Row="7" Grid.Column="1"
+                            Content="Add" Margin="1"
+                            Command="{Binding Command_AddSteamWorkshopID}"/>
+
+                        <Label Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"
+                           Content="Options"/>
+                        <Grid Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <CheckBox Grid.Row="0" Grid.Column="0" Content="Log In Anonymously" IsChecked="{Binding AnonymousSteamLogon}" Margin="1" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Max Retry Count: " Margin="1"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MaxRetryCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource IntToStringConverter}}" Margin="1"/>
+                            <CheckBox Grid.Row="2" Grid.Column="0" Content="Limit Bandwidth To: " IsChecked="{Binding LimitBandwidth}" Margin="1" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding MaxBandwidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource IntToStringConverter}}" Margin="1"/>
+                        </Grid>
+
+
+                    </Grid>
+                    <Border DockPanel.Dock="Bottom" BorderThickness="2" VerticalAlignment="Bottom" BorderBrush="Gray" Margin="2">
+                        <TextBlock TextWrapping="Wrap" Text="Make sure to close Steam client before updating!"/>
+                    </Border>
+                </DockPanel>
+
+                <Grid DockPanel.Dock="Left" Margin="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Content="Detected Addons (Steam Workshop)"/>
+                    <StackPanel Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,5,5">
+                        <TextBlock VerticalAlignment="Bottom">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0} / {1}">
+                                    <Binding Path="SucceededNumber" />
+                                    <Binding Path="SelectedNumber" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1"
+                              Width="400"
+                              Height="600"
+                              ItemsSource="{Binding Addons}"
+                              AutoGenerateColumns="False"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              AlternatingRowBackground="AliceBlue"
+                              RowHeaderWidth="0">
+                        <DataGrid.CellStyle>
+                            <Style TargetType="{x:Type DataGridCell}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding UpdateStatus}" Value="1">
+                                        <Setter Property="Foreground" Value="Green" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding UpdateStatus}" Value="2">
+                                        <Setter Property="Foreground" Value="Gold" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding UpdateStatus}" Value="3">
+                                        <Setter Property="Foreground" Value="Tomato" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="Auto" Header="✓">
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                        <EventSetter Event="PreviewMouseDown" Handler="FrameworkElement_MouseDown"/>
+                                        <Setter Property="ToolTip" Value="Double click to select/unselect all"/>
+                                        <Setter Property="FontWeight" Value="ExtraBold"/>
+                                    </Style>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>                                
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Width="2*" Binding="{Binding Name}" IsReadOnly="True" Header="Name"/> 
+                            <DataGridTextColumn Width="*" Binding="{Binding ID}" IsReadOnly="True" Header="Workshop ID"/>
+                        </DataGrid.Columns>
+
+                    </DataGrid>
+                </Grid>
+
+                <Grid DockPanel.Dock="Left" Margin="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Content="Output"/>
+                    <ScrollViewer Grid.Row="1"
+                                  Width="600" 
+                                  Height="600"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto"
+                                  x:Name="SteamOutputScrollViewer"
+                                  ScrollChanged="SteamOutputScrollViewer_ScrollChanged">
+                        <TextBox Text="{Binding SteamCMDOutput}" TextWrapping="Wrap"/>
+                    </ScrollViewer>
+                </Grid>
+                
+            </DockPanel>
+        </TabItem>
+        <TabItem Header="Addons purge">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="2">
+                    <Button DockPanel.Dock="Right" Margin="1" Width="100" Content="Remove Selected" Command="{Binding Command_RemoveSelectedAddons}"/>
+                    <Button DockPanel.Dock="Right" Content="Scan Addons" Margin="10 1" Width="100" Command="{Binding Command_ScanLocalAddons}"/>
+                </DockPanel>
+                <Grid DockPanel.Dock="Left">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>                        
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="2" Grid.Column="0"
+                       Content="Addon Folder"/>
+                    <Button Grid.Row="2" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding AddonFolder}"
+                                VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="3" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                         Text="{Binding AddonFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Grid.Row="3" Grid.Column="1"
+                        Content="Browse" Margin="1"
+                        Command="{Binding Command_OpenAddonFolder}"/>                    
+                </Grid>
+
+                <Grid DockPanel.Dock="Left" Margin="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Content="Unknown Detected Addons (local)"/>
+                    <ListBox Grid.Row="1"
+                             x:Name="UnknownAddonsBox"
+                              Width="466"
+                              Height="600"
+                              ItemsSource="{Binding UnknownAddons}"
+                              SelectionMode="Extended"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource MultiTextTrimConverter}">
+                                            <Binding Path="DataContext" RelativeSource="{RelativeSource Self}"/>
+                                            <Binding Path="DataContext.AddonFolder" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBox}}"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+                <Grid DockPanel.Dock="Left" Margin="2">
+                    <StackPanel VerticalAlignment="Center" Orientation="Vertical">
+                        <Button Margin="1"
+                                Command="{Binding Command_AddPreservedAddon}"
+                                CommandParameter="{Binding ElementName=UnknownAddonsBox, Path=SelectedItems}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Add "/>
+                                    <TextBlock Text="►" FontFamily="Arial" VerticalAlignment="Center" Padding="0,1,0,0"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <Button Margin="1"
+                                Command="{Binding Command_RemovePreservedAddon}"
+                                CommandParameter="{Binding ElementName=PreservedAddonsList, Path=SelectedItems}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="◄ " FontFamily="Arial" VerticalAlignment="Center" Padding="0,1,0,0"/>
+                                    <TextBlock Text="Remove"/>                                    
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                    </StackPanel>
+                    
+                </Grid>
+                <Grid DockPanel.Dock="Left" Margin="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Content="Preserved Addons"/>
+                    <ListBox Grid.Row="1"
+                             Width="466"
+                             Height="600"                             
+                             ItemsSource="{Binding PreservedAddons}"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             x:Name="PreservedAddonsList"
+                             SelectionMode="Extended">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource MultiTextTrimConverter}">
+                                            <Binding Path="DataContext" RelativeSource="{RelativeSource Self}"/>
+                                            <Binding Path="DataContext.AddonFolder" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBox}}"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </DockPanel>
+        </TabItem>
+        <TabItem Header="Batch file creation">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="2">
+                    <Button DockPanel.Dock="Right" Content="Create HC .bat" Margin="1" Command="{Binding Command_CreateHCBat}"
+                            ToolTip="Create .bat to start headless client"/>
+                    <Button DockPanel.Dock="Right" Content="Create Server .bat" Margin="10 1" Command="{Binding Command_CreateBat}"/>
+                    <Button DockPanel.Dock="Right" Content="Write Syntax" Margin="10 1" Command="{Binding Command_WriteSyntax}"/>
+                </DockPanel>
+                <Grid DockPanel.Dock="Left">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0"
+                       Content="Arma 3 Root Folder"/>
+                    <Button Grid.Row="0" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding RootFolder}"
+                                VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="1" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                         Text="{Binding RootFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Grid.Row="1" Grid.Column="1"
+                        Content="Browse" Margin="1"
+                        Command="{Binding Command_OpenRoot}"/>
+
+                    <Label Grid.Row="2" Grid.Column="0"
+                       Content="Addon Folder"/>
+                    <Button Grid.Row="2" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding AddonFolder}"
+                                VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="3" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                         Text="{Binding AddonFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Grid.Row="3" Grid.Column="1"
+                        Content="Browse" Margin="1"
+                        Command="{Binding Command_OpenAddonFolder}"/>
+
+                    <Label Grid.Row="4" Grid.Column="0"
+                       Content="Server-Side Addons folder"/>
+                    <Button Grid.Row="4" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding ServerAddonsFolder}"
+                                VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="5" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                         Text="{Binding ServerAddonsFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Grid.Row="5" Grid.Column="1"
+                        Content="Browse" Margin="1"
+                        Command="{Binding Command_OpenServerAddonsFolder}"/>
+
+                    <Label Grid.Row="6" Grid.Column="0"
+                       Content="Profiles Folder"/>
+                    <Button Grid.Row="6" Grid.Column="1" Content="Show"
+                                Command="{Binding Command_ShowFolder}"
+                                CommandParameter="{Binding ProfilesFolder}"
+                                VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="7" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                         Text="{Binding ProfilesFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Grid.Row="7" Grid.Column="1"
+                        Content="Browse" Margin="1"
+                        Command="{Binding Command_OpenProfiles}"/>
+
+                    <Label Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"
+                       Content="Config"/>
+                    <TextBox Grid.Row="9" Grid.Column="0" Width="240" Margin="1" TextAlignment="Left"
+                         Text="{Binding Config, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Grid.Row="9" Grid.Column="1"
+                        Content="Browse" Margin="1"
+                        Command="{Binding Command_OpenConfig}"/>
+
+                    <Label Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2"
+                       Content="Options"/>
+                    <Grid Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Grid.Row="0" Grid.Column="0" Content="Port: " x:Name="PortBox" IsChecked="{Binding WritePort}" Margin="1" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="1"
+                             IsEnabled="{Binding ElementName=PortBox, Path=IsChecked}"/>
+
+                        <CheckBox Grid.Row="1" Grid.Column="0" Content="File Patching" IsChecked="{Binding WriteFilePatching}" Margin="1" VerticalAlignment="Center"/>
+                        <CheckBox Grid.Row="2" Grid.Column="0" Content="Auto Initialization" IsChecked="{Binding WriteAutoInit}" Margin="1" VerticalAlignment="Center"/>
+                        <CheckBox Grid.Row="3" Grid.Column="0" Content="Enable Hyperthreading" IsChecked="{Binding WriteHyperThreading}" Margin="1" VerticalAlignment="Center"/>
+                        <CheckBox Grid.Row="4" Grid.Column="0" Content="64 Bit Server" IsChecked="{Binding Is64bit}" Margin="1" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Label Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,20,0,0"
+                       Content="Arma 3 Server File Name:"/>
+                    <TextBox Grid.Row="13" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="1"/>
+                    <Label Grid.Row="14" Grid.Column="0" Grid.ColumnSpan="2" Margin="1"
+                       Content="Headless Client File Name:"/>
+                    <TextBox Grid.Row="15" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding HeadlessClientFileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="1"/>
+                </Grid>
+
+                <Grid DockPanel.Dock="Left" Margin="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Content="Addon Directories"/>
+                    <ScrollViewer Grid.Row="1"
+                              Width="600"
+                              Height="600"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                        <TextBox Text="{Binding FolderContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </ScrollViewer>
+                </Grid>
+
+                <Grid DockPanel.Dock="Left" Margin="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Content="Syntax Result"/>
+                    <ScrollViewer Grid.Row="1"
+                              Width="400"
+                              Height="600"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                        <TextBox Text="{Binding ResultContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                    </ScrollViewer>
+                </Grid>
+
+            </DockPanel>
+        </TabItem>
+    </TabControl>
+    
+</Window>
